@@ -81,36 +81,36 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     switch (call.method) {
-    case "listDevices":
-      listDevices(result);
-      break;
-    case "open":
-      int vid = (int) (call.argument("vid") == null ? 0 : call.argument("vid"));
-      int pid = (int) (call.argument("pid") == null ? 0 : call.argument("pid"));
-      int deviceId = (int) (call.argument("deviceId") == null ? 0 : call.argument("deviceId"));
-      open(vid, pid, deviceId, result);
-      break;
-    case "write":
-      write((byte[]) call.argument("bytes"), result);
-      break;
-    case "close":
-      close();
-      result.success(true);
-      break;
-    case "controlTransfer":
-      int requestType = (int) (call.argument("requestType") == null ? 0 : call.argument("requestType"));
-      int request = (int) (call.argument("request") == null ? 0 : call.argument("request"));
-      int value = (int) (call.argument("value") == null ? 0 : call.argument("value"));
-      int index = (int) (call.argument("index") == null ? 0 : call.argument("index"));
-      byte[] buffer = call.argument("bytes");
-      int length = (int) (call.argument("length") == null ? 0 : call.argument("length"));
-      int timeout = (int) (call.argument("timeout") == null ? 0 : call.argument("timeout"));
-      int callResult = setControlCommand(requestType, request, value, index, buffer, length, timeout);
-      result.success(callResult);
-      break;
-    default:
-      result.notImplemented();
-      break;
+      case "listDevices":
+        listDevices(result);
+        break;
+      case "open":
+        int vid = (int) (call.argument("vid") == null ? 0 : call.argument("vid"));
+        int pid = (int) (call.argument("pid") == null ? 0 : call.argument("pid"));
+        int deviceId = (int) (call.argument("deviceId") == null ? 0 : call.argument("deviceId"));
+        open(vid, pid, deviceId, result);
+        break;
+      case "write":
+        write((byte[]) call.argument("bytes"), result);
+        break;
+      case "close":
+        close();
+        result.success(true);
+        break;
+      case "controlTransfer":
+        int requestType = (int) (call.argument("requestType") == null ? 0 : call.argument("requestType"));
+        int request = (int) (call.argument("request") == null ? 0 : call.argument("request"));
+        int value = (int) (call.argument("value") == null ? 0 : call.argument("value"));
+        int index = (int) (call.argument("index") == null ? 0 : call.argument("index"));
+        byte[] buffer = call.argument("bytes");
+        int length = (int) (call.argument("length") == null ? 0 : call.argument("length"));
+        int timeout = (int) (call.argument("timeout") == null ? 0 : call.argument("timeout"));
+        int callResult = setControlCommand(requestType, request, value, index, buffer, length, timeout);
+        result.success(callResult);
+        break;
+      default:
+        result.notImplemented();
+        break;
     }
   }
 
@@ -261,7 +261,13 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
     if (android.os.Build.VERSION.SDK_INT >= 21) {
       dev.put("manufacturerName", device.getManufacturerName());
       dev.put("productName", device.getProductName());
-      dev.put("serialNumber", device.getSerialNumber());
+      if (android.os.Build.VERSION.SDK_INT >= 29) {
+        if (m_Manager.hasPermission(device)) {
+          dev.put("serialNumber", device.getSerialNumber());
+        }
+      }
+      else
+        dev.put("serialNumber", device.getSerialNumber());
     }
     dev.put("deviceId", device.getDeviceId());
     return dev;
@@ -352,14 +358,14 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
     }
     BRC2 usbReceiver = new BRC2(device, cb);
     PendingIntent permissionIntent = PendingIntent.getBroadcast(applicationContext, 0,
-        new Intent(ACTION_USB_PERMISSION), 0);
+            new Intent(ACTION_USB_PERMISSION), 0);
     IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
     applicationContext.registerReceiver(usbReceiver, filter);
     m_Manager.requestPermission(device, permissionIntent);
   }
 
   private int setControlCommand(int requestType, int request, int value, int index, byte[] buffer, int length,
-      int timeout) {
+                                int timeout) {
     int response = m_Connection.controlTransfer(requestType, request, value, index, buffer, length, 0);
     Log.i(TAG, "Control Transfer Response: " + String.valueOf(response));
     return response;
