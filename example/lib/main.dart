@@ -136,8 +136,9 @@ class _MyAppState extends State<MyApp> {
                     return;
                   }
                   String data = _textController.text + "\r\n";
-                  await _flutterUsbWrite
+                  bool rst = await _flutterUsbWrite
                       .write(Uint8List.fromList(data.codeUnits));
+                  print('_flutterUsbWrite result: ${rst.toString()}');
                 },
         ),
       ),

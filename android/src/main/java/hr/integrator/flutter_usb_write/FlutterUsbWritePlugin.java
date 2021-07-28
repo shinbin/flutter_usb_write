@@ -141,12 +141,17 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
     if (bytes != null) {
       int transferResult = -1;
       if (this.ep != null && this.mInterface != null && this.m_Connection != null) {
-        transferResult = this.m_Connection.bulkTransfer(this.ep, bytes, bytes.length, 0);
-      } else {
-        if (this.m_Connection.claimInterface(this.mInterface, true)) {
+        if (this.m_Connection.claimInterface(this.mInterface, true)) {  //2021/07/28 : Add by Andy
           transferResult = this.m_Connection.bulkTransfer(this.ep, bytes, bytes.length, 0);
         }
       }
+      //2021/07/28 : Remove by Andy
+//      else {
+//
+//        if (this.m_Connection.claimInterface(this.mInterface, true)) {
+//          transferResult = this.m_Connection.bulkTransfer(this.ep, bytes, bytes.length, 0);
+//        }
+//      }
       result.success(transferResult >= 0);
       return;
     }
