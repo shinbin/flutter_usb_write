@@ -13,12 +13,12 @@ class MockMethodChannel extends Mock implements MethodChannel {}
 class MockEventChannel extends Mock implements EventChannel {}
 
 void main() {
-  MockMethodChannel methodChannel;
-  MockEventChannel eventChannel;
-  FlutterUsbWrite flutterUsbWrite;
+  late MockMethodChannel methodChannel;
+  late MockEventChannel eventChannel;
+  late FlutterUsbWrite flutterUsbWrite;
 
   TestWidgetsFlutterBinding.ensureInitialized();
-  UsbDevice device;
+  late UsbDevice device;
 
   setUp(() {
     device = UsbDevice(1046, 20497, "USB Portable Printer    ",
@@ -104,7 +104,7 @@ void main() {
   });
 
   group('device state', () {
-    StreamController<Map<String, dynamic>> controller;
+    late StreamController<Map<String, dynamic>> controller;
 
     setUp(() {
       controller = StreamController<Map<String, dynamic>>();
@@ -130,10 +130,7 @@ void main() {
       Map<String, dynamic> msg1 = device.toJson();
       msg1["event"] = UsbEvent.ACTION_USB_ATTACHED;
 
-      var event1 = UsbEvent();
-      event1.device = device;
-      event1.event = UsbEvent.ACTION_USB_ATTACHED;
-
+      var event1 = UsbEvent(UsbEvent.ACTION_USB_ATTACHED, device);
       controller.add(msg1);
 
       var usbEvent1 = await queue.next;
@@ -142,9 +139,7 @@ void main() {
       Map<String, dynamic> msg2 = device.toJson();
       msg2["event"] = UsbEvent.ACTION_USB_ATTACHED;
 
-      var event2 = UsbEvent();
-      event2.device = device;
-      event2.event = UsbEvent.ACTION_USB_ATTACHED;
+      var event2 = UsbEvent(UsbEvent.ACTION_USB_ATTACHED,device);
 
       controller.add(msg2);
 
@@ -154,9 +149,9 @@ void main() {
   });
 
   tearDown(() {
-    device = null;
-    flutterUsbWrite = null;
-    methodChannel = null;
-    eventChannel = null;
+    // device = null;
+    // flutterUsbWrite = null;
+    // methodChannel = null;
+    // eventChannel = null;
   });
 }

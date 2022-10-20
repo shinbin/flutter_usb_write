@@ -1,12 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
 import 'package:flutter_usb_write/flutter_usb_write.dart';
-import 'package:pedantic/pedantic.dart';
-
+// import 'package:pedantic/pedantic.dart';
+//
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
@@ -16,10 +14,10 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   FlutterUsbWrite _flutterUsbWrite = FlutterUsbWrite();
-  UsbEvent _lastEvent;
-  StreamSubscription<UsbEvent> _usbStateSubscription;
+  UsbEvent ? _lastEvent;
+  StreamSubscription<UsbEvent> ? _usbStateSubscription;
   List<UsbDevice> _devices = [];
-  int _connectedDeviceId;
+  int ? _connectedDeviceId;
   TextEditingController _textController =
       TextEditingController(text: "Hello world");
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -81,7 +79,7 @@ class _MyAppState extends State<MyApp> {
                     _devices.isNotEmpty
                         ? "Available USB Devices"
                         : "No USB devices available",
-                    style: Theme.of(context).textTheme.title),
+                    style: Theme.of(context).textTheme.titleMedium),
               ),
               ..._portList(),
               getInputTextBox(),
@@ -98,9 +96,9 @@ class _MyAppState extends State<MyApp> {
 
   Widget getEventInfo() {
     if (_lastEvent == null) return SizedBox.shrink();
-    if (_lastEvent.event.endsWith('USB_DEVICE_ATTACHED')) {
+    if (_lastEvent!.event.endsWith('USB_DEVICE_ATTACHED')) {
       return Text(
-        _lastEvent.device.manufacturerName + ' ATTACHED',
+        _lastEvent!.device.manufacturerName ?? '<Null manufacturerName>' + ' ATTACHED',
         style: TextStyle(
           color: Colors.green,
           fontWeight: FontWeight.bold,
@@ -108,7 +106,7 @@ class _MyAppState extends State<MyApp> {
       );
     }
     return Text(
-      _lastEvent.device.manufacturerName + ' DETACHED',
+      _lastEvent!.device.manufacturerName  ?? '<Null manufacturerName>' + ' DETACHED',
       style: TextStyle(
         color: Colors.red,
         fontWeight: FontWeight.bold,
@@ -127,7 +125,7 @@ class _MyAppState extends State<MyApp> {
             labelText: 'Text To Send',
           ),
         ),
-        trailing: RaisedButton(
+        trailing: ElevatedButton(
           child: Text("Send"),
           onPressed: _connectedDeviceId == null
               ? null
@@ -152,7 +150,7 @@ class _MyAppState extends State<MyApp> {
         _devices = devices;
       });
     } on PlatformException catch (e) {
-      showSnackBar(e.message);
+      showSnackBar(e.message ?? '_getPorts : Unknown Error');
     }
   }
 
@@ -162,9 +160,9 @@ class _MyAppState extends State<MyApp> {
       ports.add(
         ListTile(
           leading: Icon(Icons.usb),
-          title: Text(device.productName),
-          subtitle: Text(device.manufacturerName),
-          trailing: RaisedButton(
+          title: Text(device.productName ?? '<null>'),
+          subtitle: Text(device.manufacturerName ?? '<null>'),
+          trailing: ElevatedButton(
             child: Text(_connectedDeviceId == device.deviceId
                 ? "Disconnect"
                 : "Connect"),
@@ -185,7 +183,7 @@ class _MyAppState extends State<MyApp> {
     return ports;
   }
 
-  Future<UsbDevice> _connect(UsbDevice device) async {
+  Future<UsbDevice ?> _connect(UsbDevice device) async {
     try {
       var result = await _flutterUsbWrite.open(
         vendorId: device.vid,
@@ -199,7 +197,7 @@ class _MyAppState extends State<MyApp> {
       showSnackBar("Not allowed to do that");
       return null;
     } on PlatformException catch (e) {
-      showSnackBar(e.message);
+      showSnackBar(e.message ?? '_connect : Unknown Error');
       return null;
     }
   }
@@ -211,7 +209,7 @@ class _MyAppState extends State<MyApp> {
         _connectedDeviceId = null;
       });
     } on PlatformException catch (e) {
-      showSnackBar(e.message);
+      showSnackBar(e.message ?? '_disconnect : Unknown Error');
     }
   }
 
@@ -219,14 +217,15 @@ class _MyAppState extends State<MyApp> {
     final snackBar = SnackBar(
       content: Text(message),
     );
-    _scaffoldKey.currentState.showSnackBar(snackBar);
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
   void dispose() {
     super.dispose();
     if (_usbStateSubscription != null) {
-      _usbStateSubscription.cancel();
+      _usbStateSubscription!.cancel();
     }
   }
 }

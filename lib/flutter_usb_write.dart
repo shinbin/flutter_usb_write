@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -66,10 +65,13 @@ class UsbEvent {
       "android.hardware.usb.action.USB_DEVICE_DETACHED";
 
   /// either ACTION_USB_ATTACHED or ACTION_USB_DETACHED
-  String event;
+  final String event;
 
   /// The device for which the event was fired.
-  UsbDevice device;
+  final UsbDevice device;
+
+
+  UsbEvent(this.event, this.device);
 
   @override
   String toString() {
@@ -90,19 +92,19 @@ Copyright by Ron Bessems (https://github.com/altera2015/usbserial)
 /// This is used to determine which Usb Device to open.
 class UsbDevice {
   /// Vendor Id
-  final int vid;
+  final int ? vid;
 
   /// Product Id
-  final int pid;
-  final String productName;
-  final String manufacturerName;
+  final int ? pid;
+  final String ? productName;
+  final String ? manufacturerName;
 
   /// The device id is unique to this Usb Device until it is unplugged.
   /// when replugged this ID will be different.
-  final int deviceId;
+  final int ? deviceId;
 
   /// The Serial number from the USB device.
-  final String serial;
+  final String ? serial;
 
   UsbDevice(this.vid, this.pid, this.productName, this.manufacturerName,
       this.deviceId, this.serial);
@@ -123,7 +125,7 @@ class UsbDevice {
 
   @override
   String toString() {
-    return "UsbDevice: ${vid.toRadixString(16)}-${pid.toRadixString(16)} $productName, $manufacturerName $serial";
+    return "UsbDevice: ${vid?.toRadixString(16)}-${pid?.toRadixString(16)} $productName, $manufacturerName $serial";
   }
 }
 
@@ -137,7 +139,7 @@ class FlutterUsbWrite {
           const EventChannel('flutter_usb_write/events');
       _instance = FlutterUsbWrite.private(methodChannel, eventChannel);
     }
-    return _instance;
+    return _instance!;
   }
 
   /// This constructor is only used for testing and shouldn't be accessed by
@@ -145,23 +147,22 @@ class FlutterUsbWrite {
   @visibleForTesting
   FlutterUsbWrite.private(this._methodChannel, this._eventChannel);
 
-  static FlutterUsbWrite _instance;
+  static FlutterUsbWrite ? _instance;
 
   final MethodChannel _methodChannel;
   final EventChannel _eventChannel;
-  Stream<UsbEvent> _eventStream;
+  Stream<UsbEvent> ? _eventStream;
 
   Stream<UsbEvent> get usbEventStream {
     if (_eventStream == null) {
       _eventStream =
           _eventChannel.receiveBroadcastStream().map<UsbEvent>((value) {
-        UsbEvent msg = UsbEvent();
-        msg.device = UsbDevice.fromJSON(value);
-        msg.event = value["event"];
+        UsbEvent msg = UsbEvent(value["event"] , UsbDevice.fromJSON(value));
+
         return msg;
       });
     }
-    return _eventStream;
+    return _eventStream!;
   }
 
   /// Returns a list of UsbDevices currently plugged in.
@@ -172,10 +173,13 @@ class FlutterUsbWrite {
 
   /// Opens connection to device with specified deviceId, or with specified VendorId and ProductId
   Future<UsbDevice> open({
-    int deviceId,
-    int vendorId,
-    int productId,
+    int ? deviceId,
+    int ? vendorId,
+    int ? productId,
   }) async {
+
+    assert(deviceId != null || (vendorId!=null && productId!=null));
+
     Map<String, dynamic> args = {
       "vid": vendorId,
       "pid": productId,
@@ -212,7 +216,7 @@ class FlutterUsbWrite {
   /// Optionally set transfer control.
   /// Since this plugin supports only sending data to device, only Device-To-Host ```[requestType]``` makes sense.
   Future<int> controlTransfer(int requestType, int request, int value,
-      int index, Uint8List buffer, int length, int timeout) async {
+      int index, Uint8List ? buffer, int length, int timeout) async {
     Map<String, dynamic> args = {
       "requestType": requestType,
       "request": request,
@@ -232,20 +236,15 @@ class FlutterUsbWrite {
   Exception _getTypedException(PlatformException e) {
     switch (e.code) {
       case "DEVICE_NOT_FOUND_ERROR":
-        return DeviceNotFoundException(e.code, e.message, e.details);
-        break;
+        return DeviceNotFoundException(e.code, e.message ?? '', e.details);
       case "INTERFACE_NOT_FOUND_ERROR":
-        return InterfaceNotFoundException(e.code, e.message, e.details);
-        break;
+        return InterfaceNotFoundException(e.code, e.message ?? '', e.details);
       case "ENDPOINT_NOT_FOUND_ERROR":
-        return EndpointNotFoundException(e.code, e.message, e.details);
-        break;
+        return EndpointNotFoundException(e.code, e.message ?? '', e.details);
       case "LIST_DEVICES_ERROR":
-        return ListDevicesException(e.code, e.message, e.details);
-        break;
+        return ListDevicesException(e.code, e.message ?? '', e.details);
       case "PERMISSION_ERROR":
-        return PermissionException(e.code, e.message, e.details);
-        break;
+        return PermissionException(e.code, e.message ?? '', e.details);
       default:
         return e;
     }
