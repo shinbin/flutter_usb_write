@@ -125,7 +125,7 @@ class UsbDevice {
 
   @override
   String toString() {
-    return "UsbDevice: ${vid?.toRadixString(16)}-${pid?.toRadixString(16)} $productName, $manufacturerName $serial";
+    return "UsbDevice: ${vid?.toRadixString(16)}-${pid?.toRadixString(16)} $productName, $manufacturerName , $deviceId , $serial";
   }
 }
 

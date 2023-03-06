@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 
 import 'package:flutter_usb_write/flutter_usb_write.dart';
-// import 'package:pedantic/pedantic.dart';
-//
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
