@@ -22,6 +22,8 @@ class _MyAppState extends State<MyApp> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool didInit = false;
 
+  final _messangerKey = GlobalKey<ScaffoldMessengerState>();
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +66,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: _messangerKey,
       home: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
@@ -217,7 +220,7 @@ class _MyAppState extends State<MyApp> {
       content: Text(message),
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    _messangerKey.currentState?.showSnackBar(snackBar);
   }
 
   @override
