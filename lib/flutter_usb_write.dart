@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 
 /// Thrown when specific device to open connection to is not found
 class DeviceNotFoundException extends PlatformException {

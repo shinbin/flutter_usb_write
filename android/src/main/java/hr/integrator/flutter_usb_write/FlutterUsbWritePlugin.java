@@ -2,6 +2,7 @@ package hr.integrator.flutter_usb_write;
 
 import androidx.annotation.NonNull;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,6 +16,7 @@ import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -329,6 +331,7 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
     void onFailed(UsbDevice device, String errorCode, String error);
   }
 
+  @SuppressLint("PrivateApi")
   private void acquirePermissions(UsbDevice device, AcquirePermissionCallback cb) {
 
     class BRC2 extends BroadcastReceiver {
@@ -362,12 +365,22 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
       }
     }
     BRC2 usbReceiver = new BRC2(device, cb);
-//    PendingIntent permissionIntent = PendingIntent.getBroadcast(applicationContext, 0,
-//            new Intent(ACTION_USB_PERMISSION), 0);
     PendingIntent permissionIntent ;
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+      Intent intent = new Intent(ACTION_USB_PERMISSION);
+
+      Class<?> activityThread = null;
+      try {
+        activityThread = Class.forName("android.app.ActivityThread");
+        Method method = activityThread.getDeclaredMethod("currentPackageName");
+        String appPackageName = (String) method.invoke(activityThread);
+        intent.setPackage(appPackageName);
+      } catch (Exception e) {
+        // Not too important to throw anything
+      }
+
       permissionIntent = PendingIntent.getBroadcast
-              (applicationContext, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_MUTABLE);
+              (applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE);
     }
     else
     {
@@ -375,9 +388,14 @@ public class FlutterUsbWritePlugin implements FlutterPlugin, MethodCallHandler, 
               (applicationContext, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_ONE_SHOT);
     }
 
-
     IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-    applicationContext.registerReceiver(usbReceiver, filter);
+
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      applicationContext.registerReceiver(usbReceiver, filter, null, null, Context.RECEIVER_NOT_EXPORTED);
+    } else {
+      applicationContext.registerReceiver(usbReceiver, filter);
+    }
+
     m_Manager.requestPermission(device, permissionIntent);
   }
 
