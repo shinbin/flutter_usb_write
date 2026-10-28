@@ -1,34 +1,24 @@
 group 'hr.integrator.flutter_usb_write'
 version '1.0'
 
-buildscript {
-    repositories {
-        google()
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.0'
-    }
-}
-
 rootProject.allprojects {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 }
 
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 35
+    namespace 'hr.integrator.flutter_usb_write'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion 16
+        minSdk 16
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-    lintOptions {
+    lint {
         disable 'InvalidPackage'
     }
 }
